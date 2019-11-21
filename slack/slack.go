@@ -3,6 +3,7 @@ package slack
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/nlopes/slack"
 )
@@ -12,7 +13,30 @@ import (
    NOTE: command_arg_1 and command_arg_2 represent optional parameteras that you define
    in the Slack API UI
 */
-const helpMessage = "type in '@BOT_NAME <command_arg_1> <command_arg_2>'"
+const helpMessage = "You can say hi, ask me who's a goofy goober, and tell me to sing it."
+
+var lyrics = [18]string{
+	"I'm a Goofy Goober",
+	"Rock!",
+	"You're a Goofy Goober",
+	"We're all Goofy Goobers",
+	"Goofy Goofy Goober Goober",
+	"\"Put your toys away\"",
+	"When all I got to say",
+	"When you tell me not to play",
+	"I say no way no no no no way",
+	"\"I'm a kid\" you say",
+	"When you say I'm a kid I say",
+	"\"Say it again\"",
+	"And then I say \"thanks\"",
+	"Thanks",
+	"Thank you very much",
+	"So if you're thinking that'd you'd like to be like me",
+	"Go ahead ad try",
+	"The kid inside will set you free",
+}
+
+var lyricsOrder = [27]int{0, 1, 2, 1, 3, 1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 0, 1, 2, 1, 3, 1, 4}
 
 /*
    CreateSlackClient sets up the slack RTM (real-timemessaging) client library,
@@ -69,18 +93,32 @@ func sendHelp(slackClient *slack.RTM, message, slackChannel string) {
 	slackClient.SendMessage(slackClient.NewOutgoingMessage(helpMessage, slackChannel))
 }
 
-// sendResponse is NOT unimplemented --- write code in the function body to complete!
+func sing(slackClient *slack.RTM, slackChannel string) {
+	for i := 0; i < len(lyricsOrder); i++ {
+		str := lyrics[lyricsOrder[i]]
+		slackClient.SendMessage(slackClient.NewOutgoingMessage(str, slackChannel))
+		time.Sleep(750 * time.Millisecond)
+	}
+}
 
 func sendResponse(slackClient *slack.RTM, message, slackChannel string) {
+	response := ""
 	command := strings.ToLower(message)
-	println("[RECEIVED] sendResponse:", command)
+	switch command {
+	case "hello", "hey", "hi":
+		response = "Hello fellow Goofy Goober."
+		break
 
-	// START SLACKBOT CUSTOM CODE
-	// ===============================================================
-	// TODO:
-	//      1. Implement sendResponse for one or more of your custom Slackbot commands.
-	//         You could call an external API here, or create your own string response. Anything goes!
-	//      2. STRETCH: Write a goroutine that calls an external API based on the data received in this function.
-	// ===============================================================
-	// END SLACKBOT CUSTOM CODE
+	case "who's a goofy goober?", "whos a goofy goober?", "who's a goofy goober", "whos a goofy goober":
+		response = "I'm a Goofy Goober!"
+		break
+
+	case "sing", "sing it", "sing to me":
+		sing(slackClient, slackChannel)
+		break
+	}
+
+	if response != "" {
+		slackClient.SendMessage(slackClient.NewOutgoingMessage(response, slackChannel))
+	}
 }
